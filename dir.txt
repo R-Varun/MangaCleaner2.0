@@ -1,0 +1,17 @@
+2006.png
+classify.py
+contoured.jpg
+dilated.jpg
+dir.txt
+letter.png
+lol.png
+main.py
+manga.jpg
+manga2.jpg
+manga3.jpg
+neg characters/
+pos_character/
+re.GIF
+tatami1.mp4
+trial.png
+unnamed.jpg
