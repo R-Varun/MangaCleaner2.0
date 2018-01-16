@@ -10,7 +10,7 @@ from convnet import predict
 def getClassifierPrediction(image):
     return predict(image)
 
-image = cv2.imread("easyjob.jpeg")
+image = cv2.imread("raw5.jpg")
 gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY) # grayscale
 
 # ret,gray = cv2.threshold(image,127,255,cv2.THRESH_TRUNC)
@@ -27,7 +27,7 @@ ret,thresh = cv2.threshold(thresh,230,255,cv2.THRESH_BINARY_INV)
 cv2.imshow('image',thresh)
 cv2.waitKey(0)
 
-thresh = cv2.Canny(thresh, 100, 400)
+thresh = cv2.Canny(thresh, 500, 700)
 
 
 
@@ -39,12 +39,12 @@ cv2.imshow('image',thresh)
 cv2.waitKey(0)
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE ,(3,7))
 # dilated = cv2.dilate(thresh,kernel,iterations = 5  ) # dilate
-thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel,iterations = 4)
+# thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel,iterations = 4)
 # thresh = cv2.erode(thresh,kernel,iterations = 2)
 # cv2.imshow('image',thresh)
 # cv2.waitKey(0)
-dilated = thresh
-# dilated = cv2.dilate(thresh,kernel,iterations = 3)
+# dilated = thresh
+dilated = cv2.dilate(thresh,kernel,iterations = 3)
 cv2.imshow('image',dilated)
 cv2.waitKey(0)
 s, contours, hierarchy = cv2.findContours(dilated,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE) # get contours
@@ -85,13 +85,17 @@ if useC:
         cv2.imwrite('cur.png', pertinent)
         isValid = getClassifierPrediction("./cur.png")
         print(isValid)
+
         if isValid == 1:
             print("this one is valid")
-            # image[y:y + h, x:x + w] = [255,255,255]
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.rectangle(dilated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            image[y:y + h, x:x + w] = [255,255,255]
+            # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # cv2.rectangle(dilated, (x, y), (x + w, y + h), (0, 255, 0), 2)
         else:
-            print("pruned")
+            print("weeded out")
+
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.rectangle(dilated, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 
 if not useC:

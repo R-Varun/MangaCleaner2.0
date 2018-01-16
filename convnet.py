@@ -107,9 +107,10 @@ class Net(nn.Module):
         return x
 
 model = Net()
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+# optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), .0001)
 
-transform = transforms.Compose([transforms.Resize((32, 32)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
+transform = transforms.Compose([transforms.Resize((34, 34)), transforms.RandomHorizontalFlip(),transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),transforms.ToTensor(),
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
@@ -130,7 +131,7 @@ def train(epoch):
     total_correct = 0
 
     for epoch in range(epoch):  # loop over the dataset multiple times
-
+        print("CURRENT EPOCH " + str(epoch))
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs
@@ -151,8 +152,9 @@ def train(epoch):
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, running_loss / 2000))
                 running_loss = 0.0
+        test()
 
-    print('Finished Training')
+    # print('Finished Training')
     save_checkpoint({
         'epoch': epoch + 1,
         'arch': "ye",
@@ -221,8 +223,12 @@ def main():
     #     if val_acc > best_res:
     #         best_res = val_acc
     #         is_best = True
-    # train(100)
-    # test()
+
+    train(100)
+    # for i in range(1, 100):
+    #     print("TRAINING EPOCH "  + str(i))
+    #     train(i)
+    #     test()
 
     # n, o = loadModel()
     # test = image_loader("./test1.png")
