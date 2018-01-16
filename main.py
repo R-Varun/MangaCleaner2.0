@@ -1,31 +1,16 @@
 import cv2
 import numpy as np
-
-# img = cv2.imread('manga.jpg')
-# #Display Image
-# for i in range(100):
-#     for j in range (100):
-#         img[i,j] = [0,0,0]
-#
-# cv2.imshow('image',img)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-from matplotlib import pyplot as plt
-
-# img = cv2.imread('manga.jpg',0)
-# # edges = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-# edges = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
-# plt.subplot(121),plt.imshow(img,cmap = 'gray')
-# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-# plt.subplot(122),plt.imshow(edges,cmap = 'gray')
-# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-#
-# plt.show()
+import classify
+from classify import resize
+from convnet import predict
 
 
 
+# classifier = classify.create_classifier2()
+def getClassifierPrediction(image):
+    return predict(image)
 
-image = cv2.imread("luffy.jpg")
+image = cv2.imread("easyjob.jpeg")
 gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY) # grayscale
 
 # ret,gray = cv2.threshold(image,127,255,cv2.THRESH_TRUNC)
@@ -37,29 +22,29 @@ cv2.waitKey(0)
 gray = cv2.GaussianBlur(gray, (5,5),0)
 thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,111,50) # threshold
 
-thresh = cv2.Canny(gray, 40, 400)
+ret,thresh = cv2.threshold(thresh,230,255,cv2.THRESH_BINARY_INV)
 
-# thresh = cv2.Laplacian(gray, 30, 400)
+cv2.imshow('image',thresh)
+cv2.waitKey(0)
+
+thresh = cv2.Canny(thresh, 100, 400)
+
+
 
 thresh = cv2.medianBlur(thresh, 3)
-
-# ret,thresh = cv2.threshold(image,2,255,cv2.THRESH_BINARY_INV)
-
 
 #hopefully this would get rid of some noise as text is relatively dense
 
 cv2.imshow('image',thresh)
 cv2.waitKey(0)
-kernel = cv2.getStructuringElement(cv2.MORPH_GRADIENT ,(5,5))
+kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE ,(3,7))
 # dilated = cv2.dilate(thresh,kernel,iterations = 5  ) # dilate
-
-
 thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel,iterations = 4)
 # thresh = cv2.erode(thresh,kernel,iterations = 2)
-cv2.imshow('image',thresh)
-cv2.waitKey(0)
+# cv2.imshow('image',thresh)
+# cv2.waitKey(0)
 dilated = thresh
-# dilated = cv2.dilate(thresh,kernel,iterations = 1)
+# dilated = cv2.dilate(thresh,kernel,iterations = 3)
 cv2.imshow('image',dilated)
 cv2.waitKey(0)
 s, contours, hierarchy = cv2.findContours(dilated,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE) # get contours
@@ -80,12 +65,34 @@ if useC:
         # if h < 7 and w < 7:
         #     continue
         #erase
+
         # cv2.rectangle(image,(x,y),(x+w,y+h),(255,255,255),-1)
+        # cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
 
-        cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
-        cv2.rectangle(dilated,(x,y),(x+w,y+h),(0,255,0),2)
 
-        print("done")
+        pertinent = image[y:y+h, x:x+w]
+        # pertinent = cv2.resize(pertinent, (80, 80))
+        # pertinent = cv2.cvtColor(pertinent, cv2.COLOR_BGR2GRAY)
+        # pertinent = np.asarray(pertinent)
+        # print(pertinent)
+        # plt.imshow(pertinent)
+        # plt.show()
+
+        # trial = pertinent.reshape(1, -1)
+
+        # print(trial)
+
+        cv2.imwrite('cur.png', pertinent)
+        isValid = getClassifierPrediction("./cur.png")
+        print(isValid)
+        if isValid == 1:
+            print("this one is valid")
+            # image[y:y + h, x:x + w] = [255,255,255]
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.rectangle(dilated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        else:
+            print("pruned")
+
 
 if not useC:
     params = cv2.SimpleBlobDetector_Params()

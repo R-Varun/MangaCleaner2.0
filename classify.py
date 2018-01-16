@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from PIL import Image
-import pytesseract
 
 from sklearn.neural_network import MLPClassifier
 
@@ -14,7 +13,7 @@ def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
 
-def resize(image, width = 30, height = 30):
+def resize(image, width = 80, height = 80):
 	r = image.resize((width,height))
 	r = np.asarray(r)
 
@@ -31,6 +30,8 @@ def create_MLP_classifier():
 
 	neg_imgs = list(map(lambda x: resize(Image.open(os.path.join(neg, x)).convert('L')), os.listdir(neg)))
 	pos_imgs = list(map(lambda x: resize(Image.open(os.path.join(pos, x)).convert('L')), os.listdir(pos)))
+	np.random.shuffle(neg_imgs)
+	np.random.shuffle(pos_imgs)
 
 	hn = int(len(neg_imgs) // 2)
 	hp = int(len(pos_imgs) // 2)
@@ -92,6 +93,9 @@ def create_classifier():
 
 	neg_imgs = list(map( lambda x : resize(Image.open(os.path.join(neg, x)).convert('L')), os.listdir(neg)))
 	pos_imgs = list(map( lambda x : resize(Image.open(os.path.join(pos, x)).convert('L')), os.listdir(pos)))
+	np.random.shuffle(neg_imgs)
+	np.random.shuffle(pos_imgs)
+
 
 	hn = int(len(neg_imgs) // 2)
 	hp = int(len(pos_imgs) // 2)
@@ -119,7 +123,7 @@ def create_classifier():
 	# print(len(data[0]))
 	# print(len(data))
 	# Create a classifier: a support vector classifier
-	classifier = svm.SVC(gamma=0.001, kernel='poly',probability=True, verbose= True)
+	classifier = svm.SVC(gamma=0.001, kernel='poly',probability=True, verbose= True, max_iter=1000)
 
 	# We learn the digits on the first half of the digits
 	classifier.fit(data, target_train)
@@ -132,18 +136,51 @@ def create_classifier():
 		  % (classifier, metrics.classification_report(expected, predicted)))
 	print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
 
-	while True:
-		lol = input("input image path")
-		i = Image.open(os.path.join(dir_path, lol)).convert('L')
-		i = np.asarray(i)
-		plt.imshow(i)
-		plt.show()
-		trial = resize(Image.open(os.path.join(dir_path, lol)).convert('L')).reshape(1, -1)
+	# while True:
+	# 	lol = input("input image path")
+	# 	i = Image.open(os.path.join(dir_path, lol)).convert('L')
+	# 	i = np.asarray(i)
+	# 	plt.imshow(i)
+	# 	plt.show()
+	# 	trial = resize(Image.open(os.path.join(dir_path, lol)).convert('L')).reshape(1, -1)
+    #
+	# 	print(classifier.predict(trial))
+    #
+	return classifier
 
-		print(classifier.predict(trial))
-
-create_MLP_classifier()
+# create_MLP_classifier()
 # create_classifier()
+
+
+
+
+
+def create_classifier2():
+	dir_path = os.path.dirname(os.path.realpath(__file__))
+	neg = os.path.join(dir_path, "neg_characters", "img")
+	pos = os.path.join(dir_path, "pos_characters", "img")
+
+	width = 20
+	height = 20
+
+	neg_imgs = list(map( lambda x : resize(Image.open(os.path.join(neg, x)).convert('L')), os.listdir(neg)))
+	pos_imgs = list(map( lambda x : resize(Image.open(os.path.join(pos, x)).convert('L')), os.listdir(pos)))
+
+	hn = int(len(neg_imgs) // 2)
+	hp = int(len(pos_imgs) // 2)
+
+	trainSet = neg_imgs + pos_imgs
+	train_data = np.array(trainSet)
+	target_train = [0 for x in range(len(neg_imgs)) ] + [1 for x in range(len(pos_imgs))]
+	target_train = np.array(target_train)
+
+	data = train_data
+	classifier = svm.SVC(gamma=0.001, kernel='poly',probability=True, verbose= True, max_iter=1000)
+
+	# We learn the digits on the first half of the digits
+	classifier.fit(data, target_train)
+
+	return classifier
 
 
 def setupHAAR():

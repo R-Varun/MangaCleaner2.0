@@ -5,7 +5,7 @@ import cv2
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-neg = os.path.join(dir_path, "neg_characters")
+neg = os.path.join(dir_path, "test")
 
 
 def rnd(N=10):
@@ -32,7 +32,7 @@ def sliceImg(img, output, slices=20):
 
 	print(counter)
 
-sliceImg(cv2.imread("./sliceimage.png"), os.path.join(neg, "img"))
+sliceImg(cv2.imread("./chopthis.jpg"), os.path.join(neg, "neg"))
 
 
 
