@@ -110,7 +110,9 @@ model = Net()
 # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), .0001)
 
-transform = transforms.Compose([transforms.Resize((34, 34)), transforms.RandomHorizontalFlip(),transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),transforms.ToTensor(),
+transform = transforms.Compose([transforms.Resize((34, 34)),
+                                transforms.ColorJitter(brightness=0.5, contrast=1, saturation=0.5, hue=0.5),
+                                transforms.ToTensor(),
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
@@ -126,7 +128,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=4,
 criterion = nn.CrossEntropyLoss()
 
 
-def train(epoch):
+def train(epoch, save=False):
     model.train()
     total_correct = 0
 
@@ -152,6 +154,14 @@ def train(epoch):
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, running_loss / 2000))
                 running_loss = 0.0
+            if save:
+                save_checkpoint({
+                    'epoch': epoch + 1,
+                    'arch': "ye",
+                    'state_dict': model.state_dict(),
+                    'best_prec1': 0,
+                    'optimizer': optimizer.state_dict(),
+                }, True)
         test()
 
     # print('Finished Training')
@@ -193,9 +203,9 @@ def test():
 
 imsize = 256
 loader = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-def image_loader(image_name):
+def image_loader(image):
     """load image, returns cuda tensor"""
-    image = Image.open(image_name).convert("RGB")
+    image = image.convert("RGB")
     image = loader(image).float()
     image = Variable(image, requires_grad=True)
     image = image.unsqueeze(0)
@@ -203,39 +213,24 @@ def image_loader(image_name):
     return image  #assumes that you're using GPU
 
 
-def predict(imagePATH):
+def predict(image):
     n, o = loadModel()
-    test = image_loader(imagePATH)
+    test = image_loader(image)
 
     outputs = n(test)
     _, predicted = torch.max(outputs.data, 1)
     return int(predicted[0])
 
 def main():
+    train(200, save=True)
 
-    ## Training
-    # best_res = 0
-    # for epoch in range(0, 10):
-    #     is_best = False
-    #     train(epoch)
-    #     val_loss, val_acc = test()
+    # global model
+    # global optimizer
     #
-    #     if val_acc > best_res:
-    #         best_res = val_acc
-    #         is_best = True
-
-    train(100)
-    # for i in range(1, 100):
-    #     print("TRAINING EPOCH "  + str(i))
-    #     train(i)
-    #     test()
-
-    # n, o = loadModel()
-    # test = image_loader("./test1.png")
+    # model, optimizer = loadModel()
     #
-    # outputs = n(test)
-    # _, predicted = torch.max(outputs.data, 1)
-    # print(predicted)
+    test()
+
     pass
 
 
